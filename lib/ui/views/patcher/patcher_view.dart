@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:revanced_manager/app/app.locator.dart';
 import 'package:revanced_manager/ui/views/patcher/patcher_viewmodel.dart';
 import 'package:revanced_manager/ui/widgets/patcherView/app_selector_card.dart';
+import 'package:revanced_manager/ui/widgets/patcherView/patch_bundle_selector.dart';
 import 'package:revanced_manager/ui/widgets/patcherView/patch_selector_card.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_sliver_app_bar.dart';
 import 'package:stacked/stacked.dart';
@@ -47,6 +48,8 @@ class PatcherView extends StatelessWidget {
                     AppSelectorCard(
                       onPressed: () => model.navigateToAppSelector(),
                     ),
+                    const SizedBox(height: 16),
+                    PatchBundleSelectorCard(onPressed: () {}),
                     const SizedBox(height: 16),
                     Opacity(
                       opacity: model.dimPatchesCard() ? 0.5 : 1,

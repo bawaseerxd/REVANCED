@@ -61,6 +61,12 @@
         "widgetSubtitle": "Select an application first",
         "widgetEmptySubtitle": "No patches selected"
     },
+    "patchBundleSelectorCard": {
+        "widgetTitle": "Select patch bundle",
+        "widgetTitleSelected": "Selected patch bundle",
+        "widgetSubtitle": "Select patch bundle first",
+        "widgetEmptySubtitle": "No patch bundle selected"
+    },
     "socialMediaCard": {
         "widgetTitle": "Socials",
         "widgetSubtitle": "We are online!"

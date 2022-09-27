@@ -1,3 +1,5 @@
+import 'dart:io' show File;
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:injectable/injectable.dart';
@@ -77,6 +79,22 @@ class PatcherViewModel extends BaseViewModel {
           ],
         ),
       );
+    }
+  }
+
+  // get jar file from storage
+  Future<void> getPatchBundleFromStorage() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jar'],
+      );
+      if (result != null && result.files.single.path != null) {
+        File jarFile = File(result.files.single.path!);
+        // load patches using patcher.
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
