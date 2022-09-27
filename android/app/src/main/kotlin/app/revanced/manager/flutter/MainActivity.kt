@@ -10,6 +10,12 @@ import app.revanced.manager.flutter.utils.zip.ZipFile
 import app.revanced.manager.flutter.utils.zip.structures.ZipEntry
 import app.revanced.patcher.Patcher
 import app.revanced.patcher.PatcherOptions
+import app.revanced.patcher.data.Data
+import app.revanced.patcher.extensions.PatchExtensions.compatiblePackages
+import app.revanced.patcher.extensions.PatchExtensions.description
+import app.revanced.patcher.extensions.PatchExtensions.include
+import app.revanced.patcher.extensions.PatchExtensions.version
+import app.revanced.patcher.patch.Patch
 import app.revanced.patcher.extensions.PatchExtensions.patchName
 import app.revanced.patcher.logging.Logger
 import app.revanced.patcher.util.patch.impl.DexPatchBundle
@@ -25,6 +31,7 @@ private const val INSTALLER_CHANNEL = "app.revanced.manager.flutter/installer"
 class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var installerChannel: MethodChannel
+    private var patches = mutableListOf<Class<out Patch<Data>>>()
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -32,6 +39,26 @@ class MainActivity : FlutterActivity() {
         installerChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, INSTALLER_CHANNEL)
         mainChannel.setMethodCallHandler { call, result ->
             when (call.method) {
+                "loadPatches" -> {
+                    val jarPatchBundlePath = call.argument<String>("jarPatchBundlePath")
+                    val cacheDirPath = call.argument<String>("cacheDirPath")
+                    if (jarPatchBundlePath != null && cacheDirPath != null) {
+                        loadPatches(result, jarPatchBundlePath, cacheDirPath)
+                    } else {
+                        result.notImplemented()
+                    }
+                }
+                "getCompatiblePackages" -> getCompatiblePackages(result)
+                "getFilteredPatches" -> {
+                    val targetPackage = call.argument<String>("targetPackage")
+                    val targetVersion = call.argument<String>("targetVersion")
+                    val ignoreVersion = call.argument<Boolean>("ignoreVersion")
+                    if (targetPackage != null && targetVersion != null && ignoreVersion != null) {
+                        getFilteredPatches(result, targetPackage, targetVersion, ignoreVersion)
+                    } else {
+                        result.notImplemented()
+                    }
+                }
                 "runPatcher" -> {
                     val patchBundleFilePath = call.argument<String>("patchBundleFilePath")
                     val originalFilePath = call.argument<String>("originalFilePath")
@@ -77,6 +104,77 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    fun loadPatches(
+        result: MethodChannel.Result,
+        jarPatchBundlePath: String,
+        cacheDirPath: String
+    ) {
+        Thread(
+            Runnable {
+                patches.addAll(
+                    DexPatchBundle(
+                        jarPatchBundlePath,
+                        DexClassLoader(
+                            jarPatchBundlePath,
+                            cacheDirPath,
+                            null,
+                            javaClass.classLoader
+                        )
+                    )
+                        .loadPatches()
+                )
+                handler.post { result.success(null) }
+            }
+        )
+            .start()
+    }
+
+    fun getCompatiblePackages(result: MethodChannel.Result) {
+        Thread(
+            Runnable {
+                val filteredPackages = mutableListOf<String>()
+                patches.forEach patch@{ patch ->
+                    patch.compatiblePackages?.forEach { pkg ->
+                        filteredPackages.add(pkg.name)
+                    }
+                }
+                handler.post { result.success(filteredPackages.distinct()) }
+            }
+        )
+            .start()
+    }
+
+    fun getFilteredPatches(
+        result: MethodChannel.Result,
+        targetPackage: String,
+        targetVersion: String,
+        ignoreVersion: Boolean
+    ) {
+        Thread(
+            Runnable {
+                val filteredPatches = mutableListOf<Map<String, Any?>>()
+                patches.forEach patch@{ patch ->
+                    patch.compatiblePackages?.forEach { pkg ->
+                        if (pkg.name == targetPackage &&
+                            (ignoreVersion ||
+                                    pkg.versions.isNotEmpty() ||
+                                    pkg.versions.contains(targetVersion))
+                        ) {
+                            val p = mutableMapOf<String, Any?>()
+                            p["name"] = patch.patchName
+                            p["version"] = patch.version
+                            p["description"] = patch.description
+                            p["include"] = patch.include
+                            filteredPatches.add(p)
+                        }
+                    }
+                }
+                handler.post { result.success(filteredPatches) }
+            }
+        )
+            .start()
     }
 
     private fun runPatcher(
