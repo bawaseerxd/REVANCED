@@ -19,15 +19,23 @@ class PatcherAPI {
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
   final RootAPI _rootAPI = RootAPI();
   late Directory _tmpDir;
+  late Directory _cacheDir;
+  late Directory _workDir;
   late File _keyStoreFile;
-  List<Patch> _patches = [];
+  File? _jarPatchBundleFile;
+  File? integrations;
+  File? _inputFile;
+  File? _patchedFile;
   File? _outFile;
 
   Future<void> initialize() async {
-    await _loadPatches();
     Directory appCache = await getTemporaryDirectory();
     _tmpDir = Directory('${appCache.path}/patcher');
+    _tmpDir.createSync();
+    _workDir = _tmpDir.createTempSync("tmp-");
+    _cacheDir = Directory('${_workDir.path}/cache');
     _keyStoreFile = File('${appCache.path}/revanced-manager.keystore');
+    _cacheDir.createSync();
     cleanPatcher();
   }
 
@@ -37,63 +45,149 @@ class PatcherAPI {
     }
   }
 
-  Future<void> _loadPatches() async {
+  Future<bool> loadPatches() async {
     try {
-      if (_patches.isEmpty) {
-        _patches = await _managerAPI.getPatches();
+      if (_tmpDir == null) {
+        await initialize();
+      }
+
+      if (_jarPatchBundleFile == null) {
+        _jarPatchBundleFile = await _managerAPI.downloadPatches();
+        if (_jarPatchBundleFile == null) {
+          try {
+            await patcherChannel.invokeMethod<bool>(
+              'loadPatches',
+              {
+                'jarPatchBundlePath': _jarPatchBundleFile?.path,
+                'cacheDirPath': _cacheDir.path,
+              },
+            );
+          } on Exception {
+            return false;
+          }
+        }
       }
     } on Exception {
-      _patches = List.empty();
+      return false;
     }
+    return _jarPatchBundleFile != null;
   }
 
   Future<List<ApplicationWithIcon>> getFilteredInstalledApps() async {
     List<ApplicationWithIcon> filteredApps = [];
-    for (Patch patch in _patches) {
-      for (Package package in patch.compatiblePackages) {
-        try {
-          if (!filteredApps.any((app) => app.packageName == package.name)) {
-            ApplicationWithIcon? app = await DeviceApps.getApp(
-              package.name,
-              true,
-            ) as ApplicationWithIcon?;
-            if (app != null) {
-              filteredApps.add(app);
+    bool isLoaded = await loadPatches();
+    if (isLoaded) {
+      try {
+        List<String>? patchesPackage = await patcherChannel
+            .invokeListMethod<String>('getCompatiblePackages');
+        if (patchesPackage != null) {
+          for (String package in patchesPackage) {
+            try {
+              ApplicationWithIcon? app = await DeviceApps.getApp(package, true)
+                  as ApplicationWithIcon?;
+              if (app != null) {
+                filteredApps.add(app);
+              }
+            } catch (e) {
+              print(e);
+              continue;
             }
           }
-        } catch (e) {
-          continue;
         }
+      } on Exception {
+        return List.empty();
       }
     }
     return filteredApps;
   }
 
-  Future<List<Patch>> getFilteredPatches(String packageName) async {
-    String newPackageName = packageName.replaceFirst(
-      'app.revanced.',
-      'com.google.',
-    );
-    return _patches
-        .where((patch) =>
-            !patch.name.contains('settings') &&
-            patch.compatiblePackages.any((pack) => pack.name == newPackageName))
-        .toList();
+  Future<List<Patch>> getFilteredPatches(
+      PatchedApplication? selectedApp) async {
+    List<Patch> filteredPatches = [];
+    if (selectedApp != null) {
+      bool isLoaded = await loadPatches();
+      if (isLoaded) {
+        try {
+          var patches =
+              await patcherChannel.invokeListMethod<Map<dynamic, dynamic>>(
+            'getFilteredPatches',
+            {
+              'targetPackage': selectedApp.packageName,
+              'targetVersion': selectedApp.version,
+              'ignoreVersion': true,
+            },
+          );
+          if (patches != null) {
+            for (var patch in patches) {
+              if (!filteredPatches
+                  .any((element) => element.name == patch['name'])) {
+                filteredPatches.add(
+                  Patch(
+                    name: patch['name'],
+                    version: patch['version'],
+                    description: patch['description'],
+                    compatiblePackages: patch['compatiblePackages'],
+                    dependencies: patch['dependencies'],
+                    excluded: patch['excluded'],
+                  ),
+                );
+              }
+            }
+          }
+        } on Exception {
+          return List.empty();
+        }
+      }
+    }
+    return filteredPatches;
   }
 
-  Future<List<Patch>> getAppliedPatches(List<String> appliedPatches) async {
-    return _patches
-        .where((patch) => appliedPatches.contains(patch.name))
-        .toList();
+  Future<List<Patch>> getAppliedPatches(PatchedApplication? selectedApp) async {
+    List<Patch> appliedPatches = [];
+    if (selectedApp != null) {
+      bool isLoaded = await loadPatches();
+      if (isLoaded) {
+        try {
+          var patches =
+              await patcherChannel.invokeListMethod<Map<dynamic, dynamic>>(
+            'getFilteredPatches',
+            {
+              'targetPackage': selectedApp.packageName,
+              'targetVersion': selectedApp.version,
+              'ignoreVersion': true,
+            },
+          );
+          if (patches != null) {
+            for (var patch in patches) {
+              if (selectedApp.appliedPatches.contains(patch['name'])) {
+                appliedPatches.add(
+                  Patch(
+                    name: patch['name'],
+                    version: patch['version'],
+                    description: patch['description'],
+                    compatiblePackages: patch['compatiblePackages'],
+                    dependencies: patch['dependencies'],
+                    excluded: patch['excluded'],
+                  ),
+                );
+              }
+            }
+          }
+        } on Exception {
+          return List.empty();
+        }
+      }
+    }
+    return appliedPatches;
   }
 
-  bool dependencyNeedsIntegrations(String name) {
+  bool dependencyNeedsIntegrations(String name, List<Patch> selectedPatches) {
     return name.contains('integrations') ||
-        _patches.any(
+        selectedPatches.any(
           (patch) =>
               patch.name == name &&
               (patch.dependencies.any(
-                (dep) => dependencyNeedsIntegrations(dep),
+                (dep) => dependencyNeedsIntegrations(dep, selectedPatches),
               )),
         );
   }
@@ -101,7 +195,7 @@ class PatcherAPI {
   Future<bool> needsIntegrations(List<Patch> selectedPatches) async {
     return selectedPatches.any(
       (patch) => patch.dependencies.any(
-        (dep) => dependencyNeedsIntegrations(dep),
+        (dep) => dependencyNeedsIntegrations(dep, selectedPatches),
       ),
     );
   }
@@ -146,7 +240,7 @@ class PatcherAPI {
     bool includeSettings = await needsSettingsPatch(selectedPatches);
     if (includeSettings) {
       try {
-        Patch? settingsPatch = _patches.firstWhereOrNull(
+        Patch? settingsPatch = selectedPatches.firstWhereOrNull(
           (patch) =>
               patch.name.contains('settings') &&
               patch.compatiblePackages.any((pack) => pack.name == packageName),
@@ -242,11 +336,12 @@ class PatcherAPI {
     ShareExtend.share(log.path, 'file');
   }
 
-  String getRecommendedVersion(String packageName) {
+  Future<String> getRecommendedVersion(PatchedApplication? selectedApp) async {
     Map<String, int> versions = {};
-    for (Patch patch in _patches) {
+    final patches = await getAppliedPatches(selectedApp);
+    for (Patch patch in patches) {
       Package? package = patch.compatiblePackages.firstWhereOrNull(
-        (pack) => pack.name == packageName,
+        (pack) => pack.name == selectedApp!.packageName,
       );
       if (package != null) {
         for (String version in package.versions) {

@@ -106,9 +106,9 @@ class PatcherViewModel extends BaseViewModel {
     return text;
   }
 
-  String getRecommendedVersionString(BuildContext context) {
+  Future<String> getRecommendedVersionString(BuildContext context) async {
     String recommendedVersion =
-        _patcherAPI.getRecommendedVersion(selectedApp!.packageName);
+        await _patcherAPI.getRecommendedVersion(selectedApp);
     if (recommendedVersion.isEmpty) {
       recommendedVersion = FlutterI18n.translate(
         context,

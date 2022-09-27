@@ -17,7 +17,7 @@ class PatchesSelectorViewModel extends BaseViewModel {
 
   Future<void> initialize() async {
     patches.addAll(await _patcherAPI.getFilteredPatches(
-      locator<PatcherViewModel>().selectedApp!.packageName,
+      locator<PatcherViewModel>().selectedApp!,
     ));
     patches.sort((a, b) => a.name.compareTo(b.name));
     notifyListeners();

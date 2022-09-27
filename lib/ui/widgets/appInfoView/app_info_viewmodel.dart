@@ -46,7 +46,7 @@ class AppInfoViewModel extends BaseViewModel {
   void navigateToPatcher(PatchedApplication app) async {
     locator<PatcherViewModel>().selectedApp = app;
     locator<PatcherViewModel>().selectedPatches =
-        await _patcherAPI.getAppliedPatches(app.appliedPatches);
+        await _patcherAPI.getAppliedPatches(app);
     locator<PatcherViewModel>().notifyListeners();
     locator<NavigationViewModel>().setIndex(1);
   }

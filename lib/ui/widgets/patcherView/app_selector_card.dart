@@ -50,10 +50,9 @@ class AppSelectorCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                        locator<PatcherViewModel>()
-                        .getAppSelectionString(),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      locator<PatcherViewModel>().getAppSelectionString(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ),
           locator<PatcherViewModel>().selectedApp == null
@@ -61,9 +60,16 @@ class AppSelectorCard extends StatelessWidget {
               : Column(
                   children: [
                     const SizedBox(height: 4),
-                    Text(
-                      locator<PatcherViewModel>()
-                          .getRecommendedVersionString(context),
+                    FutureBuilder(
+                      builder: ((context, snapshot) {
+                        return Text(
+                          snapshot.data.toString(),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        );
+                      }),
                     ),
                   ],
                 ),
