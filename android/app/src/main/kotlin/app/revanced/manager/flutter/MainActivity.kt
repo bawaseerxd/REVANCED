@@ -26,6 +26,7 @@ private const val INSTALLER_CHANNEL = "app.revanced.manager.flutter/installer"
 class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var installerChannel: MethodChannel
+    var keyPass : String = "ReVanced"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -33,6 +34,9 @@ class MainActivity : FlutterActivity() {
         installerChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, INSTALLER_CHANNEL)
         mainChannel.setMethodCallHandler { call, result ->
             when (call.method) {
+                "getKeystorePassword" -> {
+                    keyPass = call.argument<String>("password") ?: "ReVanced"
+                }
                 "runPatcher" -> {
                     val patchBundleFilePath = call.argument<String>("patchBundleFilePath")
                     val originalFilePath = call.argument<String>("originalFilePath")
@@ -98,7 +102,7 @@ class MainActivity : FlutterActivity() {
         val keyStoreFile = File(keyStoreFilePath)
 
         Thread {
-            try {   
+            try {
                 val patches = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
                     PatchBundle.Dex(
                         patchBundleFilePath,
@@ -241,7 +245,7 @@ class MainActivity : FlutterActivity() {
                         )
                     )
                 }
-                Signer("ReVanced", "s3cur3p@ssw0rd").signApk(patchedFile, outFile, keyStoreFile)
+                Signer("ReVanced", keyPass).signApk(patchedFile, outFile, keyStoreFile)
 
                 handler.post {
                     installerChannel.invokeMethod(

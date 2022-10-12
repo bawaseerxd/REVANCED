@@ -136,6 +136,12 @@ class SettingsView extends StatelessWidget {
                         subtitle: 'settingsView.sourcesLabelHint',
                         onTap: () => model.showSourcesDialog(context),
                       ),
+                      SettingsTileDialog(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        title: 'settingsView.customKeystoreLabel',
+                        subtitle: 'settingsView.customKeystoreHint',
+                        onTap: () => model.selectKeystoreFromStorage(context),
+                      ),
                     ],
                   ),
                   _settingsDivider,

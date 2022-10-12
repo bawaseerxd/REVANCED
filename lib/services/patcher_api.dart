@@ -33,6 +33,12 @@ class PatcherAPI {
     cleanPatcher();
   }
 
+  // set keystore file from storage
+  Future<void> setKeyStore(File file) async {
+    _keyStoreFile.delete();
+    await file.copy(_keyStoreFile.path);
+  }
+
   void cleanPatcher() {
     if (_tmpDir.existsSync()) {
       _tmpDir.deleteSync(recursive: true);

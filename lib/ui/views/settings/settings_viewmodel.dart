@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dynamic_themes/dynamic_themes.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
@@ -10,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:revanced_manager/app/app.locator.dart';
 import 'package:revanced_manager/app/app.router.dart';
 import 'package:revanced_manager/services/manager_api.dart';
+import 'package:revanced_manager/services/patcher_api.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_material_button.dart';
 import 'package:revanced_manager/ui/widgets/settingsView/custom_text_field.dart';
 import 'package:share_extend/share_extend.dart';
@@ -23,11 +25,15 @@ const int ANDROID_12_SDK_VERSION = 31;
 class SettingsViewModel extends BaseViewModel {
   final NavigationService _navigationService = locator<NavigationService>();
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
+  final PatcherAPI _patcherAPI = locator<PatcherAPI>();
   final TextEditingController _orgPatSourceController = TextEditingController();
   final TextEditingController _patSourceController = TextEditingController();
   final TextEditingController _orgIntSourceController = TextEditingController();
   final TextEditingController _intSourceController = TextEditingController();
   final TextEditingController _apiUrlController = TextEditingController();
+  final TextEditingController _keypassController = TextEditingController();
+  static const patcherChannel =
+      MethodChannel('app.revanced.manager.flutter/patcher');
 
   void setLanguage(String language) {
     notifyListeners();
@@ -311,6 +317,70 @@ class SettingsViewModel extends BaseViewModel {
         ],
       ),
     );
+  }
+
+  //TODO: Make a separate screen for keystore management
+  Future<void> selectKeystoreFromStorage(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: I18nText('settingsView.customKeystoreLabel'),
+          backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+          content: SingleChildScrollView(
+            child: Row(
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    inputController: _keypassController,
+                    label: I18nText('settingsView.customKeystorePath'),
+                    hint: 'ReVanced',
+                    onChanged: (value) => notifyListeners(),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.folder_open_outlined),
+                  onPressed: () async {
+                    FilePickerResult? result =
+                        await FilePicker.platform.pickFiles(
+                      type: FileType.any,
+                    );
+                    if (result != null && result.files.single.path != null) {
+                      File file = File(result.files.single.path!);
+                      _patcherAPI.setKeyStore(file);
+                    }
+                    await patcherChannel.invokeMethod('getKeystorePassword',
+                        {'password': _keypassController.text});
+                    print('Keystore password: ${_keypassController.text}');
+                  },
+                  color: Theme.of(context).colorScheme.secondary,
+                )
+              ],
+            ),
+          ),
+          actions: [
+            CustomMaterialButton(
+              isFilled: false,
+              label: I18nText('cancelButton'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            CustomMaterialButton(
+              label: I18nText('okButton'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+    // FilePickerResult? result = await FilePicker.platform.pickFiles(
+    //   type: FileType.any,
+    // );
+    // if (result != null && result.files.single.path != null) {
+    //   File file = File(result.files.single.path!);
+    //   _patcherAPI.setKeyStore(file);
+    // }
   }
 
   Future<int> getSdkVersion() async {
