@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:revanced_manager/ui/views/patches_selector/patches_selector_viewmodel.dart';
 import 'package:revanced_manager/ui/widgets/patchesSelectorView/patch_item.dart';
+import 'package:revanced_manager/ui/widgets/patchesSelectorView/patch_options.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_popup_menu.dart';
 import 'package:revanced_manager/ui/widgets/shared/search_bar.dart';
 import 'package:stacked/stacked.dart';
@@ -140,24 +141,32 @@ class _PatchesSelectorViewState extends State<PatchesSelectorView> {
                       padding: const EdgeInsets.symmetric(horizontal: 12.0)
                           .copyWith(bottom: 80),
                       child: Column(
-                        children: model
-                            .getQueriedPatches(_query)
-                            .map(
-                              (patch) => PatchItem(
-                                name: patch.name,
-                                simpleName: patch.getSimpleName(),
-                                version: patch.version,
-                                description: patch.description,
-                                packageVersion: model.getAppVersion(),
-                                supportedPackageVersions:
-                                    model.getSupportedVersions(patch),
-                                isUnsupported: !model.isPatchSupported(patch),
-                                isSelected: model.isSelected(patch),
-                                onChanged: (value) =>
-                                    model.selectPatch(patch, value),
-                              ),
-                            )
-                            .toList(),
+                        children: [
+                          ...model
+                              .getQueriedPatches(_query)
+                              .map(
+                                (patch) => PatchItem(
+                                  name: patch.name,
+                                  simpleName: patch.getSimpleName(),
+                                  version: patch.version,
+                                  description: patch.description,
+                                  packageVersion: model.getAppVersion(),
+                                  supportedPackageVersions:
+                                      model.getSupportedVersions(patch),
+                                  isUnsupported: !model.isPatchSupported(patch),
+                                  isSelected: model.isSelected(patch),
+                                  onChanged: (value) =>
+                                      model.selectPatch(patch, value),
+                                ),
+                              )
+                              .toList(),
+                          // MaterialButton(
+                          //   onPressed: () {
+                          //     showPatchOptions(context);
+                          //   },
+                          //   child: const Text('Done'),
+                          // ),
+                        ],
                       ),
                     ),
             ),
@@ -166,4 +175,47 @@ class _PatchesSelectorViewState extends State<PatchesSelectorView> {
       ),
     );
   }
+}
+
+dynamic showPatchOptions(BuildContext context) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(24),
+      ),
+    ),
+    builder: (context) {
+      return DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        expand: false,
+        builder: ((context, scrollController) => SingleChildScrollView(
+              controller: scrollController,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: const <Widget>[
+                    Text(
+                      'Patch Options',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 12),
+                    StringOption(hint: 'App Name'),
+                    StringOption(hint: 'Package Name'),
+                    PathOption(
+                      hint: "Select Logo",
+                      pathOption: "logo",
+                    ),
+                    BooleanOption(),
+                    StringListOption(),
+                    IntListOption(),
+                  ],
+                ),
+              ),
+            )),
+      );
+    },
+  );
 }
