@@ -44,7 +44,6 @@ dependencies:
   font_awesome_flutter: ^10.1.0
   get_it: ^7.2.0
   google_fonts: ^3.0.1
-  http: ^0.13.4
   injectable: ^1.5.3
   intl: ^0.17.0
   json_annotation: ^4.6.0
@@ -75,6 +74,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   pub_release: ^8.0.3
   flutter_markdown: ^0.6.13
+  html: ^0.15.2
 
 dev_dependencies:
   json_serializable: ^6.3.1
