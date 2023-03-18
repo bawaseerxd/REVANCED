@@ -1,8 +1,8 @@
-package app.revanced.manager.flutter.utils.aligning
+package app.revanced.manager.flutter.utils.zip
 
 import app.revanced.manager.flutter.utils.zip.structures.ZipEntry
 
-internal object ZipAligner {
+internal object Alignment {
     private const val DEFAULT_ALIGNMENT = 4
     private const val LIBRARY_ALIGNMENT = 4096
 

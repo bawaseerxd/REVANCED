@@ -3,6 +3,7 @@ buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
         google()
+        mavenLocal()
         mavenCentral()
     }
 
@@ -15,14 +16,19 @@ buildscript {
 allprojects {
     repositories {
         google()
-        mavenCentral()
+        mavenLocal()
         maven {
-            url = uri("https://maven.pkg.github.com/revanced/revanced-patcher")
-            credentials {
-                username = (project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")) as String
-                password = (project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")) as String
-            }
+           url = uri("https://maven.pkg.github.com/revanced/revanced-patcher")
+           credentials {
+               username = (project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")) as String
+               password = (project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")) as String
+           }
+       }
+        mavenCentral()
+        flatDir {
+            dirs("libs")
         }
+
     }
 }
 

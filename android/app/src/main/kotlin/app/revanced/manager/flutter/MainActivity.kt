@@ -5,8 +5,11 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.NonNull
 import app.revanced.manager.flutter.utils.Aapt
-import app.revanced.manager.flutter.utils.aligning.ZipAligner
-import app.revanced.manager.flutter.utils.signing.Signer
+import app.revanced.manager.flutter.utils.zip.Alignment
+import app.revanced.manager.flutter.utils.apk.ApkSigner
+import app.revanced.manager.flutter.utils.logging.DefaultManagerLogger
+import app.revanced.manager.flutter.utils.logging.ManagerLogger
+import app.revanced.manager.flutter.utils.signing.SigningOptions
 import app.revanced.manager.flutter.utils.zip.ZipFile
 import app.revanced.manager.flutter.utils.zip.structures.ZipEntry
 import app.revanced.patcher.Patcher
@@ -20,6 +23,8 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import app.revanced.patcher.apk.Apk
+import app.revanced.patcher.apk.ApkBundle
 
 private const val PATCHER_CHANNEL = "app.revanced.manager.flutter/patcher"
 private const val INSTALLER_CHANNEL = "app.revanced.manager.flutter/installer"
@@ -27,8 +32,12 @@ private const val INSTALLER_CHANNEL = "app.revanced.manager.flutter/installer"
 class MainActivity : FlutterActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var installerChannel: MethodChannel
+    val logger = DefaultManagerLogger()
+
+
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
+
         super.configureFlutterEngine(flutterEngine)
         val mainChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, PATCHER_CHANNEL)
         installerChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, INSTALLER_CHANNEL)
@@ -75,6 +84,7 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+
     private fun runPatcher(
         result: MethodChannel.Result,
         patchBundleFilePath: String,
@@ -93,6 +103,7 @@ class MainActivity : FlutterActivity() {
         val outFile = File(outFilePath)
         val integrations = File(integrationsPath)
         val keyStoreFile = File(keyStoreFilePath)
+
 
         Thread {
             try {
@@ -118,14 +129,39 @@ class MainActivity : FlutterActivity() {
                         )
                     )
                 }
-                val patcher =
+
+                class ApkArgs {
+                    lateinit var baseApk: String
+                    var splitsArgs: SplitsArgs? = null
+
+                    inner class SplitsArgs {
+                        lateinit var libraryApk: String
+                        lateinit var assetApk: String
+                        lateinit var languageApk: String
+                    }
+                }
+
+                // prepare apks
+                val apkArgs = ApkArgs()
+
+                val baseApk = Apk.Base(apkArgs.baseApk, DefaultManagerLogger)
+                val splitApk = apkArgs.splitsArgs?.let { args ->
+                    with(args) {
+                        ApkBundle.Split(
+                            Apk.Split.Library(libraryApk, DefaultManagerLogger),
+                            Apk.Split.Asset(assetApk, DefaultManagerLogger),
+                            Apk.Split.Language(languageApk, DefaultManagerLogger)
+                        )
+                    }
+                }
+
+                    val patcher =
                     Patcher(
                         PatcherOptions(
-                            inputFile,
+                            ApkBundle(baseApk, splitApk, DefaultManagerLogger),
                             cacheDirPath,
                             Aapt.binary(applicationContext).absolutePath,
                             cacheDirPath,
-                            logger = ManagerLogger()
                         )
                     )
 
@@ -220,12 +256,12 @@ class MainActivity : FlutterActivity() {
                     res.resourceFile?.let {
                         file.copyEntriesFromFileAligned(
                             ZipFile(it),
-                            ZipAligner::getEntryAlignment
+                            Alignment::getEntryAlignment
                         )
                     }
                     file.copyEntriesFromFileAligned(
                         ZipFile(inputFile),
-                        ZipAligner::getEntryAlignment
+                        Alignment::getEntryAlignment
                     )
                 }
                 handler.post {
@@ -242,7 +278,7 @@ class MainActivity : FlutterActivity() {
                 // Signer("ReVanced", "s3cur3p@ssw0rd").signApk(patchedFile, outFile, keyStoreFile)
 
                 try {
-                    Signer("ReVanced", "s3cur3p@ssw0rd").signApk(patchedFile, outFile, keyStoreFile)
+                    ApkSigner(SigningOptions("ReVanced", "s3cur3p@ssw0rd", keyStoreFilePath)).signApk(patchedFile, outFile)
                 } catch (e: Exception) {
                     //log to console
                     print("Error signing apk: ${e.message}")
