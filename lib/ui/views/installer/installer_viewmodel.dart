@@ -17,6 +17,7 @@ import 'package:revanced_manager/ui/views/patcher/patcher_viewmodel.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_material_button.dart';
 import 'package:stacked/stacked.dart';
 import 'package:wakelock/wakelock.dart';
+import 'package:android_package_manager/android_package_manager.dart';
 
 class InstallerViewModel extends BaseViewModel {
   final ManagerAPI _managerAPI = locator<ManagerAPI>();

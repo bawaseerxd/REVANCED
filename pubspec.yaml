@@ -74,6 +74,7 @@ dependencies:
   pub_release: ^8.0.3
   flutter_markdown: ^0.6.13
   dio_cache_interceptor: ^3.4.0
+  android_package_manager: ^0.5.2
 
 dev_dependencies:
   json_serializable: ^6.3.1

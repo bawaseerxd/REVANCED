@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:android_package_manager/android_package_manager.dart';
 import 'package:app_installer/app_installer.dart';
 import 'package:collection/collection.dart';
 import 'package:cr_file_saver/file_saver.dart';
@@ -13,6 +14,7 @@ import 'package:revanced_manager/models/patch.dart';
 import 'package:revanced_manager/models/patched_application.dart';
 import 'package:revanced_manager/services/manager_api.dart';
 import 'package:revanced_manager/services/root_api.dart';
+import 'package:revanced_manager/services/toast.dart';
 import 'package:share_extend/share_extend.dart';
 
 @lazySingleton
@@ -20,6 +22,7 @@ class PatcherAPI {
   static const patcherChannel =
       MethodChannel('app.revanced.manager.flutter/patcher');
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
+  final Toast _toast = locator<Toast>();
   final RootAPI _rootAPI = RootAPI();
   late Directory _dataDir;
   late Directory _tmpDir;
@@ -220,6 +223,22 @@ class PatcherAPI {
     }
   }
 
+  // check signature of installed/selected app and patched app
+  Future<bool> checkSignatures(String packageName1, String packageName2) async {
+    final SignatureCheckResult result =
+        await AndroidPackageManager().checkSignatures(
+      packageName1: packageName1,
+      packageName2: packageName2,
+    );
+
+    // check if the signature is the same
+    if (result == SignatureCheckResult.match) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<bool> installPatchedFile(PatchedApplication patchedApp) async {
     if (_outFile != null) {
       try {
@@ -233,7 +252,19 @@ class PatcherAPI {
             );
           }
         } else {
-          await AppInstaller.installApk(_outFile!.path);
+          // install if signature is the same
+          if (await checkSignatures(
+            patchedApp.packageName,
+            patchedApp.originalPackageName,
+          )) {
+            await AppInstaller.installApk(_outFile!.path);
+          } else {
+            _toast.showBottom(
+              'Signature mismatch. Please install manually.',
+            );
+            return false;
+          }
+
           return await DeviceApps.isAppInstalled(patchedApp.packageName);
         }
       } on Exception catch (e) {
