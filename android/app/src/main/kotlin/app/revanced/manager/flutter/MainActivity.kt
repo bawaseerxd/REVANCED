@@ -139,6 +139,7 @@ class MainActivity : FlutterActivity() {
 
                 // prepare apks
                 val apkArgs = ApkArgs()
+                apkArgs.baseApk = inputFilePath
 
                 val baseApk = Apk.Base(apkArgs.baseApk, DefaultManagerLogger)
                 /*

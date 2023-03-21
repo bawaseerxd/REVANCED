@@ -78,7 +78,7 @@ dependencies {
     implementation "app.revanced:revanced-patcher:7.0.0"
 
 //    get patcher from local maven
-//    implementation files("libs/ARSCLib.jar")
+    implementation("com.reandroid.arsclib:ARSCLib")
 
 
 
@@ -89,6 +89,4 @@ dependencies {
     // MicroG cronet
     implementation("org.microg:cronet-common:$cronetVersion")
     implementation("org.microg:cronet-native:$cronetVersion")
-
-//    implementation(files("android/libs/ARSCLib.jar"))
 }
