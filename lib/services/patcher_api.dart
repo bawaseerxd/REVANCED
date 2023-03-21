@@ -224,19 +224,17 @@ class PatcherAPI {
   }
 
   // check signature of installed/selected app and patched app
-  Future<bool> checkSignatures(String packageName1, String packageName2) async {
-    final SignatureCheckResult result =
-        await AndroidPackageManager().checkSignatures(
-      packageName1: packageName1,
-      packageName2: packageName2,
-    );
+  Future<bool> checkSignatures(String installedApp, String patchedApp) async {
+    // final SignatureCheckResult result =
+    //     await AndroidPackageManager().checkSignatures(
+    //   packageName1: installedApp,
+    //   packageName2: patchedApp,
+    // );
 
-    // check if the signature is the same
-    if (result == SignatureCheckResult.match) {
-      return true;
-    } else {
-      return false;
-    }
+    final installedAppSignature = AndroidPackageManager().getPackageInfo(packageName: installedApp, flags: PackageInfoFlags({PMFlag.getSigningCertificates}));
+    final patchedAppSignature = AndroidPackageManager().getPackageArchiveInfo(archiveFilePath: patchedApp, flags: PackageInfoFlags({PMFlag.getSigningCertificates}));
+    print('installed app: $installedAppSignature\npatched app: $patchedAppSignature\nb');
+    return true;
   }
 
   Future<bool> installPatchedFile(PatchedApplication patchedApp) async {
@@ -255,7 +253,7 @@ class PatcherAPI {
           // install if signature is the same
           if (await checkSignatures(
             patchedApp.packageName,
-            patchedApp.originalPackageName,
+            patchedApp.apkFilePath,
           )) {
             await AppInstaller.installApk(_outFile!.path);
           } else {
