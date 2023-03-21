@@ -4,14 +4,10 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.NonNull
-import app.revanced.manager.flutter.utils.Aapt
-import app.revanced.manager.flutter.utils.zip.Alignment
 import app.revanced.manager.flutter.utils.apk.ApkSigner
 import app.revanced.manager.flutter.utils.logging.DefaultManagerLogger
 import app.revanced.manager.flutter.utils.logging.ManagerLogger
 import app.revanced.manager.flutter.utils.signing.SigningOptions
-import app.revanced.manager.flutter.utils.zip.ZipFile
-import app.revanced.manager.flutter.utils.zip.structures.ZipEntry
 import app.revanced.patcher.Patcher
 import app.revanced.patcher.PatcherOptions
 import app.revanced.patcher.extensions.PatchExtensions.compatiblePackages
@@ -25,6 +21,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import app.revanced.patcher.apk.Apk
 import app.revanced.patcher.apk.ApkBundle
+import app.revanced.patcher.patch.PatchResult
 
 private const val PATCHER_CHANNEL = "app.revanced.manager.flutter/patcher"
 private const val INSTALLER_CHANNEL = "app.revanced.manager.flutter/installer"
@@ -104,7 +101,6 @@ class MainActivity : FlutterActivity() {
         val integrations = File(integrationsPath)
         val keyStoreFile = File(keyStoreFilePath)
 
-
         Thread {
             try {
                 handler.post {
@@ -145,6 +141,7 @@ class MainActivity : FlutterActivity() {
                 val apkArgs = ApkArgs()
 
                 val baseApk = Apk.Base(apkArgs.baseApk, DefaultManagerLogger)
+                /*
                 val splitApk = apkArgs.splitsArgs?.let { args ->
                     with(args) {
                         ApkBundle.Split(
@@ -153,14 +150,14 @@ class MainActivity : FlutterActivity() {
                             Apk.Split.Language(languageApk, DefaultManagerLogger)
                         )
                     }
-                }
+                }*/
 
                     val patcher =
                     Patcher(
                         PatcherOptions(
-                            ApkBundle(baseApk, splitApk, DefaultManagerLogger),
+                            ApkBundle(baseApk, null, DefaultManagerLogger),
                             cacheDirPath,
-                            Aapt.binary(applicationContext).absolutePath,
+                            "/this/will/explode/later/and/is/unused/i/just/havent/removed/it/yet",
                             cacheDirPath,
                         )
                     )
@@ -181,7 +178,7 @@ class MainActivity : FlutterActivity() {
                         )
                     )
                 }
-                patcher.addIntegrations(listOf(integrations)) {}
+                patcher.addIntegrations(listOf(integrations))
 
                 handler.post {
                     installerChannel.invokeMethod(
@@ -197,22 +194,18 @@ class MainActivity : FlutterActivity() {
                 val patches = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
                     PatchBundle.Dex(
                         patchBundleFilePath,
-                        DexClassLoader(
-                            patchBundleFilePath,
-                            cacheDirPath,
-                            null,
-                            javaClass.classLoader
-                        )
-                    ).loadPatches().filter { patch ->
-                        (patch.compatiblePackages?.any { it.name == patcher.context.packageMetadata.packageName } == true || patch.compatiblePackages.isNullOrEmpty()) &&
+                    ).loadPatches(
+                        cacheDirPath,
+                    ).filter { patch ->
+                        (patch.compatiblePackages?.any { it.name == baseApk.packageMetadata.packageName } == true || patch.compatiblePackages.isNullOrEmpty()) &&
                                 selectedPatches.any { it == patch.patchName }
                     }
                 } else {
                     TODO("VERSION.SDK_INT < CUPCAKE")
                 }
                 patcher.addPatches(patches)
-                patcher.executePatches().forEach { (patch, res) ->
-                    if (res.isSuccess) {
+                patcher.execute(false).forEach { (patch, res) ->
+                    if (res is PatchResult.Success) {
                         val msg = "Applied $patch"
                         handler.post {
                             installerChannel.invokeMethod(
@@ -226,7 +219,8 @@ class MainActivity : FlutterActivity() {
                         }
                         return@forEach
                     }
-                    val msg = "Failed to apply $patch: " + "${res.exceptionOrNull()!!.message ?: res.exceptionOrNull()!!.cause!!::class.simpleName}"
+                    val e = res as PatchResult.Error
+                    val msg = "Failed to apply $patch: " + "${e.cause!!.message ?: e.cause!!::class.simpleName}"
                     handler.post {
                         installerChannel.invokeMethod(
                             "update",
@@ -246,24 +240,8 @@ class MainActivity : FlutterActivity() {
                     )
                 }
                 val res = patcher.save()
-                ZipFile(patchedFile).use { file ->
-                    res.dexFiles.forEach {
-                        file.addEntryCompressData(
-                            ZipEntry.createWithName(it.name),
-                            it.stream.readBytes()
-                        )
-                    }
-                    res.resourceFile?.let {
-                        file.copyEntriesFromFileAligned(
-                            ZipFile(it),
-                            Alignment::getEntryAlignment
-                        )
-                    }
-                    file.copyEntriesFromFileAligned(
-                        ZipFile(inputFile),
-                        Alignment::getEntryAlignment
-                    )
-                }
+                // TODO: loop over the apks in res instead.
+                baseApk.save(patchedFile)
                 handler.post {
                     installerChannel.invokeMethod(
                         "update",
