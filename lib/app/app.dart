@@ -38,6 +38,7 @@ import 'package:stacked_services/stacked_services.dart';
     LazySingleton(classType: RevancedAPI),
     LazySingleton(classType: GithubAPI),
     LazySingleton(classType: Toast),
+    LazySingleton(classType: DialogService),
   ],
 )
 class AppSetup {}

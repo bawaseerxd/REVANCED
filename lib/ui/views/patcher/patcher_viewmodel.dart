@@ -7,6 +7,7 @@ import 'package:revanced_manager/models/patch.dart';
 import 'package:revanced_manager/models/patched_application.dart';
 import 'package:revanced_manager/services/manager_api.dart';
 import 'package:revanced_manager/services/patcher_api.dart';
+import 'package:revanced_manager/services/toast.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_material_button.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -16,6 +17,7 @@ class PatcherViewModel extends BaseViewModel {
   final NavigationService _navigationService = locator<NavigationService>();
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
   final PatcherAPI _patcherAPI = locator<PatcherAPI>();
+  final Toast _toast = locator<Toast>();
   PatchedApplication? selectedApp;
   List<Patch> selectedPatches = [];
 
@@ -37,6 +39,18 @@ class PatcherViewModel extends BaseViewModel {
 
   bool dimPatchesCard() {
     return selectedApp == null;
+  }
+
+  // load local patches
+  Future<void> loadLocalPatches() async {
+    _toast.showBottom('patcherView.selectPatchJSON');
+    await _patcherAPI.selectJSONFromStorage();
+    Future.delayed(const Duration(seconds: 1), () async {
+      _toast.showBottom('patcherView.selectPatchJar');
+      await _patcherAPI.selectJarFromStorage();
+      notifyListeners();
+    });
+    notifyListeners();
   }
 
   Future<bool> isValidPatchConfig() async {

@@ -64,7 +64,7 @@ class InstallerViewModel extends BaseViewModel {
     }
     await Wakelock.enable();
     await handlePlatformChannelMethods();
-    await runPatcher();
+    await runPatcher(context);
   }
 
   Future<dynamic> handlePlatformChannelMethods() async {
@@ -121,7 +121,7 @@ class InstallerViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  Future<void> runPatcher() async {
+  Future<void> runPatcher(BuildContext context) async {
     try {
       update(0.0, 'Initializing...', 'Initializing installer');
       if (_patches.isNotEmpty) {
@@ -131,6 +131,7 @@ class InstallerViewModel extends BaseViewModel {
             _app.packageName,
             _app.apkFilePath,
             _patches,
+            context,
           );
         } on Exception catch (e) {
           update(

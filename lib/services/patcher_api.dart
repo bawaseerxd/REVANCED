@@ -1,11 +1,17 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:app_installer/app_installer.dart';
 import 'package:collection/collection.dart';
 import 'package:cr_file_saver/file_saver.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_i18n/flutter_i18n.dart';
 import 'package:injectable/injectable.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:revanced_manager/app/app.locator.dart';
@@ -14,6 +20,7 @@ import 'package:revanced_manager/models/patched_application.dart';
 import 'package:revanced_manager/services/manager_api.dart';
 import 'package:revanced_manager/services/root_api.dart';
 import 'package:share_extend/share_extend.dart';
+import 'package:stacked_services/stacked_services.dart';
 
 @lazySingleton
 class PatcherAPI {
@@ -21,6 +28,7 @@ class PatcherAPI {
       MethodChannel('app.revanced.manager.flutter/patcher');
   final ManagerAPI _managerAPI = locator<ManagerAPI>();
   final RootAPI _rootAPI = RootAPI();
+  final DialogService _dialogService = locator<DialogService>();
   late Directory _dataDir;
   late Directory _tmpDir;
   late File _keyStoreFile;
@@ -161,10 +169,26 @@ class PatcherAPI {
     }
   }
 
+  Future<File?> selectJarFromStorage() async {
+    try {
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jar'],
+      );
+      if (result != null && result.files.single.path != null) {
+        return File(result.files.single.path!);
+      }
+    } on Exception {
+      return null;
+    }
+    return null;
+  }
+
   Future<void> runPatcher(
     String packageName,
     String originalFilePath,
     List<Patch> selectedPatches,
+    BuildContext context,
   ) async {
     final bool includeSettings = await needsSettingsPatch(selectedPatches);
     if (includeSettings) {
@@ -183,7 +207,18 @@ class PatcherAPI {
         }
       }
     }
-    final File? patchBundleFile = await _managerAPI.downloadPatches();
+    File? patchBundleFile = await _managerAPI.downloadPatches();
+    if (patchBundleFile == null) {
+      final response = await _dialogService.showConfirmationDialog(
+        title:
+            FlutterI18n.translate(context, 'patcherView.missingJarDialogLabel'),
+        description:
+            FlutterI18n.translate(context, 'patcherView.missingJarDialogText'),
+      );
+      if (response != null && response.confirmed) {
+        patchBundleFile = await selectJarFromStorage();
+      }
+    }
     final File? integrationsFile = await _managerAPI.downloadIntegrations();
     if (patchBundleFile != null) {
       _dataDir.createSync();
@@ -258,6 +293,25 @@ class PatcherAPI {
         );
       }
     } on Exception catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
+  }
+
+  Future<void> selectJSONFromStorage() async {
+    try {
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      if (result != null && result.files.single.path != null) {
+        final f = File(result.files.single.path!);
+        final List<dynamic> list = jsonDecode(f.readAsStringSync());
+        _patches = list.map((patch) => Patch.fromJson(patch)).toList();
+      }
+    } on Exception catch (e) {
+      _patches = List.empty();
       if (kDebugMode) {
         print(e);
       }

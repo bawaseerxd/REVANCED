@@ -47,7 +47,9 @@
     "patcherView": {
         "widgetTitle": "Patcher",
         "patchButton": "Patch",
-        "patchDialogText": "You have selected a resource patch and a split APK installation has been detected, so patching errors may occur.\nAre you sure you want to proceed?"
+        "patchDialogText": "You have selected a resource patch and a split APK installation has been detected, so patching errors may occur.\nAre you sure you want to proceed?",
+        "missingJarDialogLabel": "Missing Jar file",
+        "missingJarDialogText": "The Jar file is missing, please select from storage."
     },
     "appSelectorCard": {
         "widgetTitle": "Select an application",
@@ -59,10 +61,14 @@
         "anyVersion": "any"
     },
     "patchSelectorCard": {
-        "widgetTitle": "Select patches",
+        "widgetTitle": "Official patches",
         "widgetTitleSelected": "Selected patches",
-        "widgetSubtitle": "Select an application first",
+        "widgetSubtitle": "Use official ReVanced patches",
         "widgetEmptySubtitle": "No patches selected"
+    },
+    "localPatchSelectorCard": {
+        "selectLocalPatchesLabel": "Local Patches",
+        "selectLocalPatchesText": "Select patch json and jar from storage"
     },
     "socialMediaCard": {
         "widgetTitle": "Socials",

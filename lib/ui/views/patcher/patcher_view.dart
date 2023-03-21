@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:revanced_manager/app/app.locator.dart';
 import 'package:revanced_manager/ui/views/patcher/patcher_viewmodel.dart';
 import 'package:revanced_manager/ui/widgets/patcherView/app_selector_card.dart';
+import 'package:revanced_manager/ui/widgets/patcherView/local_patch_selector_card.dart';
 import 'package:revanced_manager/ui/widgets/patcherView/patch_selector_card.dart';
 import 'package:revanced_manager/ui/widgets/shared/custom_sliver_app_bar.dart';
 import 'package:stacked/stacked.dart';
@@ -48,13 +49,38 @@ class PatcherView extends StatelessWidget {
                       onPressed: () => model.navigateToAppSelector(),
                     ),
                     const SizedBox(height: 16),
-                    Opacity(
-                      opacity: model.dimPatchesCard() ? 0.5 : 1,
-                      child: PatchSelectorCard(
-                        onPressed: model.dimPatchesCard()
-                            ? () => {}
-                            : () => model.navigateToPatchesSelector(),
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.43,
+                          height: MediaQuery.of(context).size.height * 0.15,
+                          child: PatchSelectorCard(
+                            onPressed: model.dimPatchesCard()
+                                ? () => {}
+                                : () => model.navigateToPatchesSelector(),
+                          ),
+                        ),
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.43,
+                          height: MediaQuery.of(context).size.height * 0.15,
+                          child: LocalPatchSelectorCard(
+                            onPressed: () => model.loadLocalPatches(),
+                          ),
+                        ),
+
+                        // Opacity(
+                        //   opacity: model.dimPatchesCard() ? 0.5 : 1,
+                        //   child: PatchSelectorCard(
+                        //     onPressed: model.dimPatchesCard()
+                        //         ? () => {}
+                        //         : () => model.navigateToPatchesSelector(),
+                        //   ),
+                        // ),
+                        // LocalPatchSelectorCard(
+                        //   onPressed: () => model.loadLocalPatches(),
+                        // )
+                      ],
                     ),
                   ],
                 ),
