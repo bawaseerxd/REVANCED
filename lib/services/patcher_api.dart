@@ -30,6 +30,7 @@ class PatcherAPI {
   List<Patch> _patches = [];
   Map filteredPatches = <String, List<Patch>>{};
   File? _outFile;
+  final AndroidPackageManager _pm = AndroidPackageManager();
 
   Future<void> initialize() async {
     await _loadPatches();
@@ -225,19 +226,25 @@ class PatcherAPI {
 
   // check signature of installed/selected app and patched app
   Future<bool> checkSignatures(String installedApp, String patchedApp) async {
-    // final SignatureCheckResult result =
-    //     await AndroidPackageManager().checkSignatures(
-    //   packageName1: installedApp,
-    //   packageName2: patchedApp,
-    // );
+    final installedAppSignature = await _pm.getPackageInfo(
+      packageName: installedApp,
+      flags: PackageInfoFlags({PMFlag.getSigningCertificates}),
+    );
+    print(installedAppSignature);
 
-    final installedAppSignature = AndroidPackageManager().getPackageInfo(packageName: installedApp, flags: PackageInfoFlags({PMFlag.getSigningCertificates}));
-    final patchedAppSignature = AndroidPackageManager().getPackageArchiveInfo(archiveFilePath: patchedApp, flags: PackageInfoFlags({PMFlag.getSigningCertificates}));
-    print('installed app: $installedAppSignature\npatched app: $patchedAppSignature\nb');
-    return true;
+    final patchedAppSignature = await _pm.getPackageArchiveInfo(
+      archiveFilePath: patchedApp,
+      flags: PackageInfoFlags({PMFlag.getSigningCertificates}),
+    );
+    print(patchedAppSignature);
+    print(
+        'installed app: $installedAppSignature\npatched app: $patchedAppSignature\nb');
+
+    return installedAppSignature == patchedAppSignature;
   }
 
   Future<bool> installPatchedFile(PatchedApplication patchedApp) async {
+    checkSignatures(patchedApp.packageName, patchedApp.apkFilePath);
     if (_outFile != null) {
       try {
         if (patchedApp.isRooted) {
@@ -250,18 +257,7 @@ class PatcherAPI {
             );
           }
         } else {
-          // install if signature is the same
-          if (await checkSignatures(
-            patchedApp.packageName,
-            patchedApp.apkFilePath,
-          )) {
-            await AppInstaller.installApk(_outFile!.path);
-          } else {
-            _toast.showBottom(
-              'Signature mismatch. Please install manually.',
-            );
-            return false;
-          }
+          await AppInstaller.installApk(_outFile!.path);
 
           return await DeviceApps.isAppInstalled(patchedApp.packageName);
         }
