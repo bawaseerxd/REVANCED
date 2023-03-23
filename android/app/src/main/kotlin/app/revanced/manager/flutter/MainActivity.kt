@@ -197,6 +197,7 @@ class MainActivity : FlutterActivity() {
                         patchBundleFilePath,
                     ).loadPatches(
                         cacheDirPath,
+                        javaClass.classLoader,
                     ).filter { patch ->
                         (patch.compatiblePackages?.any { it.name == baseApk.packageMetadata.packageName } == true || patch.compatiblePackages.isNullOrEmpty()) &&
                                 selectedPatches.any { it == patch.patchName }
