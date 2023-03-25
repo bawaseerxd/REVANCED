@@ -1,6 +1,7 @@
 {
     "okButton": "OK",
     "cancelButton": "Peruuta",
+    "updateButton": "Päivitä",
     "enabledLabel": "Käytössä",
     "disabledLabel": "Poistettu käytöstä",
     "yesButton": "Kyllä",
@@ -21,7 +22,7 @@
         "noInstallations": "Paikattuja sovelluksia ei ole asennettu",
         "installed": "Asennettu",
         "updateDialogTitle": "Päivitä Manager",
-        "updateDialogText": "Haluatko varmasti ladata ja päivittää ReVanced Managerin?",
+        "updateChangelogTitle": "Muutoshistoria",
         "notificationTitle": "Päivitys ladattu",
         "notificationText": "Asenna päivitys napauttamalla",
         "downloadingMessage": "Ladataan päivitystä...",
@@ -34,7 +35,7 @@
     "applicationItem": {
         "patchButton": "Paikkaa",
         "infoButton": "Info",
-        "changelogLabel": "Muutosloki"
+        "changelogLabel": "Muutoshistoria"
     },
     "latestCommitCard": {
         "loadingLabel": "Ladataan...",
@@ -65,7 +66,7 @@
     },
     "socialMediaCard": {
         "widgetTitle": "Somet",
-        "widgetSubtitle": "Löydymme täältä!"
+        "widgetSubtitle": "Olemme verkossa!"
     },
     "appSelectorView": {
         "viewTitle": "Valitse sovellus",
@@ -78,10 +79,13 @@
         "searchBarHint": "Etsi paikkauksia",
         "doneButton": "Valmis",
         "recommended": "Suositellut",
+        "recommendedTooltip": "Valitse kaikki suositellut paikkaukset",
         "all": "Kaikki",
+        "allTooltip": "Valitut kaikki paikkaukset",
         "none": "Ei mitään",
+        "noneTooltip": "Tyhjennä kaikki paikkausvalinnat",
         "loadPatchesSelection": "Lataa paikkausvalikoima",
-        "noSavedPatches": "Paikkauksia ei ole tallennettu valitulle sovellukselle\nTallenna nykyinen valikoima paunamalla Valmis",
+        "noSavedPatches": "Valitulle sovellukselle ei ole tallennettu paikkauksia.\nTallenna nykyinen valinta painamalla Valmis.",
         "noPatchesFound": "Valitulle sovellukselle ei löytynyt paikkauksia",
         "selectAllPatchesWarningContent": "Olet valitsemassa kaikki paikkaukset ja näihin sisältyy myös ei suositeltavia paikkauksia, jotka saattavat aiheuttaa ei toivottua toimintaa."
     },
@@ -97,7 +101,7 @@
         "shareButton": "Jaa tiedosto",
         "notificationTitle": "ReVanced Manager suorittaa paikkauksia",
         "notificationText": "Napauta palataksesi hallintasovellukseen",
-        "shareApkMenuOption": "Jaa APK",
+        "shareApkMenuOption": "Jaa APK-tiedosto",
         "exportApkMenuOption": "Vie APK",
         "shareLogMenuOption": "Jaa loki",
         "installErrorDialogTitle": "Virhe",
@@ -121,6 +125,7 @@
         "englishOption": "Englanti",
         "sourcesLabel": "Lähteet",
         "sourcesLabelHint": "Määritä mukautetut lähteet",
+        "hostRepositoryLabel": "Tietovarasto-API",
         "orgPatchesLabel": "Paikkauksien organisaatio",
         "sourcesPatchesLabel": "Paikkauksien lähde",
         "orgIntegrationsLabel": "Integraatioiden organisaatio",
@@ -135,14 +140,14 @@
         "apiURLLabel": "API URL",
         "apiURLHint": "Määritä oma API URL-osoite",
         "selectApiURL": "API:n URL-osoite",
-        "experimentalPatchesLabel": "Kokeellinen paikkaustuki",
-        "experimentalPatchesHint": "Mahdollistaa paikkausten asennuksen myös ei tuettuihin sovellusversiohin",
-        "enabledExperimentalPatches": "Kokeellinen paikkaustuki on käytössä",
+        "experimentalUniversalPatchesLabel": "Kokeellisten universaalien paikkausten tuki",
+        "experimentalUniversalPatchesHint": "Näytä kaikki sovellukset, jotka käyttävät yleisiä paikkauksia, sovellus listan lataaminen voi olla hitaampi",
+        "experimentalPatchesLabel": "Kokeellisten paikkausten tuki",
+        "experimentalPatchesHint": "Mahdollistaa ei tuettujen paikkausten asennuksen mihin tahansa sovellusversioon",
+        "enabledExperimentalPatches": "Kokeellisten paikkausten tuki on käytössä",
         "exportSectionTitle": "Tuonti/vienti",
         "aboutLabel": "Tietoja",
         "snackbarMessage": "Kopioitu leikepöydälle",
-        "sentryLabel": "Sentry-lokikirjaus",
-        "sentryHint": "Lähetä nimettömiä tietoja auttaaksesi ReVanced Managerin kehityksessä",
         "restartAppForChanges": "Käynnistä sovellus uudestaan muutosten käyttöönottamiseksi",
         "deleteKeystoreLabel": "Poista avainsäilö",
         "deleteKeystoreHint": "Poista sovelluksen allekirjoitukseen käytetty avainsäilö",

@@ -24,7 +24,7 @@
         "updateDialogTitle": "Mettre à jour le Manager",
         "updateChangelogTitle": "Liste des changements",
         "notificationTitle": "Mise à jour téléchargée",
-        "notificationText": "Appuyez sur pour installer la mise à jour",
+        "notificationText": "Appuyer pour installer la mise à jour",
         "downloadingMessage": "Téléchargement de la mise à jour...",
         "installingMessage": "Installation de la mise à jour...",
         "errorDownloadMessage": "Impossible de télécharger la mise à jour",
@@ -52,7 +52,7 @@
     "appSelectorCard": {
         "widgetTitle": "Sélectionner une application",
         "widgetTitleSelected": "Application sélectionnée",
-        "widgetSubtitle": "Aucune application sélectionnée",
+        "widgetSubtitle": "Aucune application n'a été sélectionnée",
         "noAppsLabel": "Aucune application trouvée",
         "currentVersion": "Version actuelle",
         "recommendedVersion": "Version recommandée",
@@ -79,15 +79,18 @@
         "searchBarHint": "Rechercher des patchs",
         "doneButton": "Terminé",
         "recommended": "Recommandé",
+        "recommendedTooltip": "Sélectionner tous les patchs recommandés",
         "all": "Tout",
+        "allTooltip": "Sélectionner tous les patchs",
         "none": "Aucun",
+        "noneTooltip": "Désélectionner tous les patchs",
         "loadPatchesSelection": "Charger les patchs sélectionnés",
         "noSavedPatches": "Aucun patch enregistré pour l'application sélectionnée.\nAppuyez sur Terminé pour enregistrer la sélection actuelle.",
         "noPatchesFound": "Aucun patch n'a été trouvé pour l'application sélectionnée",
         "selectAllPatchesWarningContent": "Vous êtes sur le point de sélectionner tous les patchs, cela inclut des patchs non recommandés et peut causer des comportements indésirables."
     },
     "patchItem": {
-        "unsupportedDialogText": "La sélection de ce patch peut entraîner des erreurs.\n\nVersion de l'application : {packageVersion}\nVersions prises en charge :\n{supportedVersions}",
+        "unsupportedDialogText": "Sélectionner ce patch pourrait entrainer des erreurs dans la modification.\n\nVersion de l'application: {packageVersion}\nVersions supportées:\n{supportedVersions}",
         "unsupportedPatchVersion": "Le correctif n'est pas pris en charge pour cette version de l'application. Activez le bouton expérimental dans les paramètres pour continuer."
     },
     "installerView": {
@@ -145,8 +148,6 @@
         "exportSectionTitle": "Importer & exporter",
         "aboutLabel": "À propos",
         "snackbarMessage": "Copié dans le presse-papier",
-        "sentryLabel": "Journal sentinel",
-        "sentryHint": "Envoyer des journaux anonymes pour nous aider à améliorer ReVanced Manager",
         "restartAppForChanges": "Redémarrez l'application pour appliquer les changements",
         "deleteKeystoreLabel": "Supprimer le magasin de clés",
         "deleteKeystoreHint": "Supprimer le magasin de clés utilisé pour signer l'application",
